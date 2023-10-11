@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>火车快跑</title>
+</head>
+<style>
+    html {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    body {
+        width: 100%;
+        height: 100%;
+        background-color: #3dffe5;
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    .trainPage {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .page {
+        min-width: 800px;
+        min-height: 800px;
+        width: 60%;
+        height: 80%;
+    }
+
+    .top {
+        width: 100%;
+        height: 80px;
+        line-height: 80px;
+        display: flex;
+    }
+
+    .top>div {
+        flex: 1;
+    }
+
+    .trainBox {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border: 2px solid #fff;
+    }
+
+    /* .car {
+        width: 90px;
+        height: 25px;
+        display: flex;
+    } */
+
+    .t1,
+    .t2,
+    .t3 {
+        width: 30px;
+        height: 30px;
+        border-top-right-radius: 40px;
+        border-top-left-radius: 10px;
+        border-bottom-right-radius: 7px;
+        background-color: red;
+
+
+    }
+
+    .trabox {
+        position: absolute;
+        padding: 8px 4px 2px;
+        box-sizing: border-box;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .t1 {
+        top: 0px;
+        left: 0px;
+    }
+
+    .t2 {
+        top: 0px;
+        left: 30px;
+    }
+
+    .t3 {
+        top: 0px;
+        left: 60px;
+    }
+
+    .curtain {
+        width: 7px;
+        height: 8px;
+        margin-right: 2px;
+        background-color: #000;
+    }
+
+    .line {
+        width: 17px;
+        height: 2px;
+        background: #000;
+    }
+
+    .hide {
+        position: absolute;
+        left: -99999999999999999px;
+    }
+</style>
+
+<body>
+    <div class="trainPage">
+        <div class="page">
+            <div class="top">
+                <div>
+                    <label>是否播放背景音乐：</label>
+                    <select id="isMusic" onkeydown="defaultSelect(event)">
+                        <option value=1>是</option>
+                        <option value=0>否</option>
+                    </select>
+                </div>
+                <div>得分：1</div>
+            </div>
+            <div class="trainBox">
+                <div class="t1 trabox">
+                    <div class="curtain"></div>
+                    <div class="curtain"></div>
+                    <div class="line"></div>
+                </div>
+                <div class="t2 trabox">
+                    <div class="curtain"></div>
+                    <div class="curtain"></div>
+                    <div class="line"></div>
+                </div>
+                <div class="t3 trabox">
+                    <div class="curtain"></div>
+                    <div class="curtain"></div>
+                    <div class="line"></div>
+                </div>
+            </div>
+            <audio class="hide" id="audio" loop controls src="./assets/bgm.mp3">
+        </div>
+
+    </div>
+</body>
+<script>
+    document.body.addEventListener('keydown', move, false)
+
+    const isMusic = document.getElementById('isMusic')
+    isMusic.value = '0'
+    const trainNode = document.getElementsByClassName('trabox')
+    const audio = document.getElementById('audio')
+
+
+
+    let direction = 39    // 初始方向 右39 ArrowRight，左 37 ArrowLeft， 上38ArrowUp， 下40ArrowDown
+    const speed = trainNode[0].offsetWidth
+    let sign = 1
+
+
+
+    isMusic.addEventListener('change', function () {
+        +isMusic.value ? audio.play() : audio.pause()
+    })
+
+
+    // 蛇动，只控制蛇头移动，后面的身体等于上一个的移动轨迹
+    function move(e) {
+        if (![37, 38, 39, 40].includes(e.keyCode)) return
+        trainDir(e.keyCode)
+    }
+
+    // 车头方向
+    const trainDir = (keyCode) => {
+        // 同方向不动
+        if (keyCode === direction) return
+
+        // 水平方向只允许上下移动，垂直方向只允许左右移动
+        if ((direction === 39 || direction === 37) && [38, 40].includes(keyCode)) {
+            direction = keyCode
+        }
+        if ((direction === 38 || direction === 40) && [39, 37].includes(keyCode)) {
+            direction = keyCode
+        }
+
+
+    }
+    // 先实现不停的向一个方向移动
+    const trainMovement = (direction) => {
+        // 存放上一个轨迹
+        let recordPre = { x: 0, y: 0 }
+        let preRecord = { x: 0, y: 0 }
+        for (i = 0; i <= trainNode.length - 1; i++) {
+            let item = trainNode[trainNode.length - 1 - i]
+            // 记录一开始的位置
+            // 比如一开始头的位置是60 ， 30
+            // 移动后的位置是 60 60,将第一次的60,30记录下来
+
+            // 第二次开始的位置是60,0
+            // 等于上一次的移动60， 30， 将第二次的60,0记录下来
+
+            // 第三次开始的位置是30，0
+            // 等于上一次的移动位置60,0， 将第二次的30,0记录下来
+            recordPre = {
+                x: item.offsetLeft,
+                y: item.offsetTop,
+                transform: item.style.transform
+            }
+            // 车头轨迹
+            if (i === 0) {
+                // img.style.transform=`rotateY(${code===37 ? 180 :0}deg)`
+                // img.style.transform=`rotate(${code===38 ? -90 :90}deg)`
+                switch (direction) {
+                    case 39:
+                        item.style.left = `${item.offsetLeft + speed}px`;
+                        item.style.transform = `rotateZ(0deg)`
+                        break;
+                    case 37:
+                        item.style.left = `${item.offsetLeft - speed}px`;
+                        item.style.transform = `rotateY(180deg)`
+                        break;
+                    case 38:
+                        item.style.top = `${item.offsetTop - speed}px`;
+                        item.style.transform = `rotateZ(-90deg)`
+                        break;
+                    default:
+                        item.style.top = `${item.offsetTop + speed}px`;
+                        item.style.transform = `rotateZ(90deg)`
+                        break;
+
+                }
+            } else {
+
+                item.style.left = `${preRecord.x}px`
+                item.style.top = `${preRecord.y}px`
+                item.style.transform = preRecord.transform
+            }
+
+            preRecord = {
+                x: recordPre.x,
+                y: recordPre.y,
+                transform: recordPre.transform
+            }
+        }
+
+    }
+    setInterval(() => {
+        trainMovement(direction)
+    }, 300)
+
+    //   禁止下拉选项被上下左右控制的事件
+    function defaultSelect(e) {
+        var keyCode = window.event ? e.keyCode : e.which;
+        if (e.preventDefault) {
+            if (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40) {
+                e.preventDefault();
+            }
+        } else {
+            if (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40) {
+                window.event.returnValue == false;
+            }
+        }
+    }
+</script>
+
+</html>
